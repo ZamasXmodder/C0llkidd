@@ -1,0 +1,19 @@
+local player = game:GetService("Players").LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- GUI de prueba
+local testGui = Instance.new("ScreenGui", playerGui)
+testGui.Name = "TestGui"
+
+local frame = Instance.new("Frame", testGui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BorderSizePixel = 3
+frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+
+local label = Instance.new("TextLabel", frame)
+label.Size = UDim2.new(1, 0, 1, 0)
+label.Text = "¡GUI FUNCIONA!"
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.BackgroundTransparency = 1
