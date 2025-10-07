@@ -1,687 +1,435 @@
--- Recreación completa del GUI original de c00lkidd con imagen personalizada y sonidos clásicos
+-- Procedural Neon Playground GUI
+-- Every spawn rebuilds a completely new interactive control surface with randomized aesthetics
+
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Lighting = game:GetService("Lighting")
+local Debris = game:GetService("Debris")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
+local randomizer = Random.new(tick())
 
--- ID de imagen personalizada
-local CUSTOM_IMAGE_ID = "rbxassetid://122516441342599"
+local adjectives = {"Quantum", "Neon", "Cyber", "Retro", "Liquid", "Plasma", "Hypno", "Astro", "Flux"}
+local nouns = {"Cascade", "Pulse", "Orbit", "Bloom", "Drift", "Glyph", "Storm", "Echo", "Spiral"}
 
--- Crear el ScreenGui principal
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "c00lkiddGUI"
-screenGui.Parent = playerGui
-screenGui.ResetOnSpawn = false
-
--- Frame principal (estilo clásico c00lkidd)
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 300, 0, 450)
-mainFrame.Position = UDim2.new(0, 50, 0, 50)
-mainFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
-mainFrame.BorderSizePixel = 2
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
-
--- Header del GUI (estilo original)
-local header = Instance.new("Frame")
-header.Name = "Header"
-header.Size = UDim2.new(1, 0, 0, 25)
-header.Position = UDim2.new(0, 0, 0, 0)
-header.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-header.BorderSizePixel = 0
-header.Parent = mainFrame
-
--- Título original
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Name = "Title"
-titleLabel.Size = UDim2.new(1, -50, 1, 0)
-titleLabel.Position = UDim2.new(0, 5, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "c00lkidd's GUI"
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextSize = 14
-titleLabel.Font = Enum.Font.Arial
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Parent = header
-
--- Botón X clásico
-local closeButton = Instance.new("TextButton")
-closeButton.Name = "Close"
-closeButton.Size = UDim2.new(0, 20, 0, 20)
-closeButton.Position = UDim2.new(1, -22, 0, 2)
-closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeButton.TextSize = 12
-closeButton.Font = Enum.Font.Arial
-closeButton.BorderSizePixel = 1
-closeButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-closeButton.Parent = header
-
--- ScrollingFrame para los botones (estilo original)
-local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Name = "ScrollFrame"
-scrollFrame.Size = UDim2.new(1, -10, 1, -35)
-scrollFrame.Position = UDim2.new(0, 5, 0, 30)
-scrollFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-scrollFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-scrollFrame.BorderSizePixel = 1
-scrollFrame.ScrollBarThickness = 10
-scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
-scrollFrame.Parent = mainFrame
-
--- Layout vertical
-local listLayout = Instance.new("UIListLayout")
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Padding = UDim.new(0, 2)
-listLayout.Parent = scrollFrame
-
--- Función para crear botones estilo c00lkidd
-local function createButton(text, callback, layoutOrder)
-	local button = Instance.new("TextButton")
-	button.Name = text
-	button.Size = UDim2.new(1, -10, 0, 25)
-	button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	button.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	button.BorderSizePixel = 1
-	button.Text = text
-	button.TextColor3 = Color3.fromRGB(255, 255, 255)
-	button.TextSize = 12
-	button.Font = Enum.Font.Arial
-	button.LayoutOrder = layoutOrder or 1
-	button.Parent = scrollFrame
-
-	-- Efecto hover clásico
-	button.MouseEnter:Connect(function()
-		button.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
-	end)
-
-	button.MouseLeave:Connect(function()
-		button.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	end)
-
-	button.MouseButton1Click:Connect(callback)
-
-	return button
+local function randomColor()
+        return Color3.fromHSV(randomizer:NextNumber(), 0.7 + randomizer:NextNumber() * 0.3, 0.6 + randomizer:NextNumber() * 0.4)
 end
 
--- Función para detener todos los sonidos
-local function stopAllSounds()
-	for _, obj in pairs(workspace:GetChildren()) do
-		if obj:IsA("Sound") then
-			obj:Stop()
-			obj:Destroy()
-		end
-	end
+local function randomChoice(array)
+        return array[randomizer:NextInteger(1, #array)]
 end
 
--- Botones originales del c00lkidd GUI
-createButton("Kick All", function()
-	print("Kick All ejecutado")
-end, 1)
-
-createButton("Ban All", function()
-	print("Ban All ejecutado")
-end, 2)
-
-createButton("Shutdown", function()
-	print("Shutdown ejecutado")
-end, 3)
-
-createButton("Disco", function()
-	spawn(function()
-		for i = 1, 50 do
-			Lighting.Ambient = Color3.fromHSV(math.random(), 1, 1)
-			wait(0.1)
-		end
-		Lighting.Ambient = Color3.fromRGB(138, 138, 138)
-	end)
-end, 4)
-
-createButton("It's Raining Tacos", function()
-	stopAllSounds()
-
-	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://110781750430942" -- It's Raining Tacos (clásico c00lkidd)
-	sound.Volume = 0.8
-	sound.Looped = true
-	sound.Parent = workspace
-	sound:Play()
-
-	print("Playing: It's Raining Tacos!")
-end, 5)
-
-createButton("Caramelldansen", function()
-	stopAllSounds()
-
-	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://110781750430942" -- Caramelldansen
-	sound.Volume = 0.8
-	sound.Looped = true
-	sound.Parent = workspace
-	sound:Play()
-
-	print("Playing: Caramelldansen!")
-end, 6)
-
-createButton("Nyan Cat", function()
-	stopAllSounds()
-
-	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://110781750430942" -- Nyan Cat
-	sound.Volume = 0.8
-	sound.Looped = true
-	sound.Parent = workspace
-	sound:Play()
-
-	print("Playing: Nyan Cat!")
-end, 7)
-
-createButton("Trololo", function()
-	stopAllSounds()
-
-	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://110781750430942" -- Trololo
-	sound.Volume = 0.8
-	sound.Looped = true
-	sound.Parent = workspace
-	sound:Play()
-
-	print("Playing: Trololo!")
-end, 8)
-
-createButton("Stop Music", function()
-	stopAllSounds()
-	print("All music stopped!")
-end, 9)
-
-createButton("Decalspam", function()
-	for i = 1, 15 do
-		local part = Instance.new("Part")
-		part.Size = Vector3.new(10, 10, 1)
-		part.Position = Vector3.new(math.random(-50, 50), 10, math.random(-50, 50))
-		part.Anchored = true
-		part.Parent = workspace
-
-		for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-			local decal = Instance.new("Decal")
-			decal.Texture = CUSTOM_IMAGE_ID
-			decal.Face = face
-			decal.Parent = part
-		end
-	end
-end, 10)
-
-createButton("Skybox", function()
-	local sky = Instance.new("Sky")
-	sky.SkyboxBk = CUSTOM_IMAGE_ID
-	sky.SkyboxDn = CUSTOM_IMAGE_ID
-	sky.SkyboxFt = CUSTOM_IMAGE_ID
-	sky.SkyboxLf = CUSTOM_IMAGE_ID
-	sky.SkyboxRt = CUSTOM_IMAGE_ID
-	sky.SkyboxUp = CUSTOM_IMAGE_ID
-	sky.Parent = Lighting
-end, 11)
-
-createButton("Hint", function()
-	local hint = Instance.new("Hint")
-	hint.Text = "c00lkidd was here!"
-	hint.Parent = workspace
-
-	game:GetService("Debris"):AddItem(hint, 5)
-end, 12)
-
-createButton("Message", function()
-	local message = Instance.new("Message")
-	message.Text = "Server has been c00lkidd'd!"
-	message.Parent = workspace
-
-	game:GetService("Debris"):AddItem(message, 5)
-end, 13)
-
-createButton("Particles", function()
-	for _, part in pairs(workspace:GetChildren()) do
-		if part:IsA("BasePart") then
-			local attachment = Instance.new("Attachment")
-			attachment.Parent = part
-
-			local particles = Instance.new("ParticleEmitter")
-			particles.Texture = CUSTOM_IMAGE_ID
-			particles.Lifetime = NumberRange.new(2, 5)
-			particles.Rate = 100
-			particles.SpreadAngle = Vector2.new(45, 45)
-			particles.Speed = NumberRange.new(5, 15)
-			particles.Size = NumberSequence.new{
-				NumberSequenceKeypoint.new(0, 1),
-				NumberSequenceKeypoint.new(1, 0)
-			}
-			particles.Parent = attachment
-		end
-	end
-end, 14)
-
-createButton("UnAnchor All", function()
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("BasePart") then
-			obj.Anchored = false
-		end
-	end
-end, 15)
-
-createButton("Clear Workspace", function()
-	for _, obj in pairs(workspace:GetChildren()) do
-		if obj ~= workspace.CurrentCamera and not Players:GetPlayerFromCharacter(obj) then
-			obj:Destroy()
-		end
-	end
-end, 16)
-
-createButton("Baseplate", function()
-	local baseplate = Instance.new("Part")
-	baseplate.Name = "Baseplate"
-	baseplate.Size = Vector3.new(512, 20, 512)
-	baseplate.Position = Vector3.new(0, -10, 0)
-	baseplate.Anchored = true
-	baseplate.BrickColor = BrickColor.new("Bright green")
-	baseplate.Material = Enum.Material.Grass
-	baseplate.Parent = workspace
-end, 17)
-
-createButton("Spam Bricks", function()
-	for i = 1, 20 do
-		local brick = Instance.new("Part")
-		brick.Size = Vector3.new(4, 4, 4)
-		brick.Position = Vector3.new(math.random(-50, 50), 20, math.random(-50, 50))
-		brick.BrickColor = BrickColor.Random()
-		brick.Parent = workspace
-
-		for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-			local decal = Instance.new("Decal")
-			decal.Texture = CUSTOM_IMAGE_ID
-			decal.Face = face
-			decal.Transparency = 0.3
-			decal.Parent = brick
-		end
-	end
-end, 18)
-
-createButton("Image Flood", function()
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("BasePart") and obj.Name ~= "HumanoidRootPart" then
-			for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-				local decal = Instance.new("Decal")
-				decal.Texture = CUSTOM_IMAGE_ID
-				decal.Face = face
-				decal.Parent = obj
-			end
-		end
-	end
-end, 19)
-
-createButton("Image Rain", function()
-	spawn(function()
-		for i = 1, 30 do
-			local part = Instance.new("Part")
-			part.Size = Vector3.new(2, 2, 0.1)
-			part.Position = Vector3.new(math.random(-100, 100), 100, math.random(-100, 100))
-			part.CanCollide = false
-			part.Parent = workspace
-
-			local decal = Instance.new("Decal")
-			decal.Texture = CUSTOM_IMAGE_ID
-			decal.Face = Enum.NormalId.Front
-			decal.Parent = part
-
-			local bodyVelocity = Instance.new("BodyVelocity")
-			bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
-			bodyVelocity.Velocity = Vector3.new(0, -50, 0)
-			bodyVelocity.Parent = part
-
-			game:GetService("Debris"):AddItem(part, 10)
-			wait(0.1)
-		end
-	end)
-end, 20)
-
-createButton("Replace Sun", function()
-	Lighting.SunAngularSize = 50
-	Lighting.SunSize = 50
-
-	local fakeSun = Instance.new("Part")
-	fakeSun.Name = "CustomSun"
-	fakeSun.Size = Vector3.new(100, 100, 100)
-	fakeSun.Shape = Enum.PartType.Ball
-	fakeSun.Material = Enum.Material.Neon
-	fakeSun.BrickColor = BrickColor.new("Bright yellow")
-	fakeSun.Anchored = true
-	fakeSun.CanCollide = false
-	fakeSun.Position = Vector3.new(0, 500, 0)
-	fakeSun.Parent = workspace
-
-	for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-		local decal = Instance.new("Decal")
-		decal.Texture = CUSTOM_IMAGE_ID
-		decal.Face = face
-		decal.Transparency = 0.3
-		decal.Parent = fakeSun
-	end
-
-	local pointLight = Instance.new("PointLight")
-	pointLight.Brightness = 2
-	pointLight.Range = 1000
-	pointLight.Color = Color3.fromRGB(255, 255, 0)
-	pointLight.Parent = fakeSun
-
-	spawn(function()
-		while fakeSun.Parent do
-			fakeSun.CFrame = fakeSun.CFrame * CFrame.Angles(0, math.rad(1), 0)
-			wait(0.1)
-		end
-	end)
-
-	Lighting.Brightness = 3
-	Lighting.Ambient = Color3.fromRGB(255, 200, 100)
-	Lighting.OutdoorAmbient = Color3.fromRGB(255, 255, 0)
-end, 21)
-
-createButton("Solar Eclipse", function()
-	local originalBrightness = Lighting.Brightness
-	local originalAmbient = Lighting.Ambient
-
-	spawn(function()
-		for i = 1, 20 do
-			Lighting.Brightness = originalBrightness * (1 - i/20)
-			Lighting.Ambient = Color3.lerp(originalAmbient, Color3.fromRGB(50, 0, 50), i/20)
-			wait(0.2)
-		end
-
-		local eclipse = Instance.new("Part")
-		eclipse.Name = "Eclipse"
-		eclipse.Size = Vector3.new(200, 200, 1)
-		eclipse.Position = Vector3.new(0, 300, 0)
-		eclipse.Anchored = true
-		eclipse.CanCollide = false
-		eclipse.Transparency = 0.3
-		eclipse.BrickColor = BrickColor.new("Really black")
-		eclipse.Parent = workspace
-
-		local eclipseDecal = Instance.new("Decal")
-		eclipseDecal.Texture = CUSTOM_IMAGE_ID
-		eclipseDecal.Face = Enum.NormalId.Front
-		eclipseDecal.Parent = eclipse
-
-		local selectionBox = Instance.new("SelectionBox")
-		selectionBox.Adornee = eclipse
-		selectionBox.Color3 = Color3.fromRGB(255, 0, 0)
-		selectionBox.LineThickness = 5
-		selectionBox.Transparency = 0.5
-		selectionBox.Parent = eclipse
-
-		wait(5)
-
-		for i = 1, 20 do
-			Lighting.Brightness = originalBrightness * (i/20)
-			Lighting.Ambient = Color3.lerp(Color3.fromRGB(50, 0, 50), originalAmbient, i/20)
-			wait(0.2)
-		end
-
-		eclipse:Destroy()
-	end)
-end, 22)
-
-createButton("Sun Explosion", function()
-	for i = 1, 8 do
-		local explodingSun = Instance.new("Part")
-		explodingSun.Name = "ExplodingSun" .. i
-		explodingSun.Size = Vector3.new(50, 50, 50)
-		explodingSun.Shape = Enum.PartType.Ball
-		explodingSun.Material = Enum.Material.Neon
-		explodingSun.BrickColor = BrickColor.new("Bright orange")
-		explodingSun.Anchored = true
-		explodingSun.CanCollide = false
-		explodingSun.Position = Vector3.new(0, 400, 0)
-		explodingSun.Parent = workspace
-
-		for _, face in pairs(Enum.NormalId:GetEnumItems()) do
-			local decal = Instance.new("Decal")
-			decal.Texture = CUSTOM_IMAGE_ID
-			decal.Face = face
-			decal.Parent = explodingSun
-		end
-
-		local bodyVelocity = Instance.new("BodyVelocity")
-		bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-
-		local angle = (i / 8) * math.pi * 2
-		local direction = Vector3.new(
-			math.cos(angle) * 100,
-			math.random(-20, 50),
-			math.sin(angle) * 100
-		)
-
-		bodyVelocity.Velocity = direction
-		bodyVelocity.Parent = explodingSun
-
-		spawn(function()
-			while explodingSun.Parent do
-				explodingSun.CFrame = explodingSun.CFrame * CFrame.Angles(
-					math.rad(10), math.rad(10), math.rad(10)
-				)
-				explodingSun.Size = explodingSun.Size + Vector3.new(0.5, 0.5, 0.5)
-				wait(0.1)
-			end
-		end)
-
-		game:GetService("Debris"):AddItem(explodingSun, 10)
-	end
-
-	spawn(function()
-		for i = 1, 30 do
-			Lighting.Brightness = math.random(0, 5)
-			Lighting.Ambient = Color3.fromHSV(math.random(), 1, 1)
-			wait(0.1)
-		end
-		Lighting.Brightness = 2
-		Lighting.Ambient = Color3.fromRGB(138, 138, 138)
-	end)
-end, 23)
-
-createButton("Image Tornado", function()
-	local center = Vector3.new(0, 10, 0)
-	local radius = 20
-	local height = 50
-
-	spawn(function()
-		for i = 1, 50 do
-			local angle = (i / 50) * math.pi * 4
-			local x = center.X + math.cos(angle) * radius
-			local z = center.Z + math.sin(angle) * radius
-			local y = center.Y + (i / 50) * height
-
-			local part = Instance.new("Part")
-			part.Size = Vector3.new(3, 3, 0.1)
-			part.Position = Vector3.new(x, y, z)
-			part.Anchored = true
-			part.CanCollide = false
-			part.Parent = workspace
-
-			local decal = Instance.new("Decal")
-			decal.Texture = CUSTOM_IMAGE_ID
-			decal.Face = Enum.NormalId.Front
-			decal.Parent = part
-
-			spawn(function()
-				while part.Parent do
-					part.CFrame = part.CFrame * CFrame.Angles(0, math.rad(5), 0)
-					wait(0.1)
-				end
-			end)
-
-			game:GetService("Debris"):AddItem(part, 15)
-			wait(0.1)
-		end
-	end)
-end, 24)
-
-createButton("Image Explosion", function()
-	local center = Vector3.new(0, 20, 0)
-
-	for i = 1, 30 do
-		local part = Instance.new("Part")
-		part.Size = Vector3.new(2, 2, 0.1)
-		part.Position = center
-		part.CanCollide = false
-		part.Parent = workspace
-
-		local decal = Instance.new("Decal")
-		decal.Texture = CUSTOM_IMAGE_ID
-		decal.Face = Enum.NormalId.Front
-		decal.Parent = part
-
-		local bodyVelocity = Instance.new("BodyVelocity")
-		bodyVelocity.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-
-		local direction = Vector3.new(
-			math.random(-100, 100),
-			math.random(20, 100),
-			math.random(-100, 100)
-		).Unit * math.random(30, 80)
-
-		bodyVelocity.Velocity = direction
-		bodyVelocity.Parent = part
-
-		spawn(function()
-			while part.Parent do
-				part.CFrame = part.CFrame * CFrame.Angles(
-					math.rad(math.random(-10, 10)),
-					math.rad(math.random(-10, 10)),
-					math.rad(math.random(-10, 10))
-				)
-				wait(0.1)
-			end
-		end)
-
-		game:GetService("Debris"):AddItem(part, 8)
-	end
-end, 25)
-
-createButton("Replace All Textures", function()
-	for _, obj in pairs(workspace:GetDescendants()) do
-		if obj:IsA("Decal") or obj:IsA("Texture") then
-			obj.Texture = CUSTOM_IMAGE_ID
-		elseif obj:IsA("ImageLabel") or obj:IsA("ImageButton") then
-			obj.Image = CUSTOM_IMAGE_ID
-		elseif obj:IsA("Sky") then
-			obj.SkyboxBk = CUSTOM_IMAGE_ID
-			obj.SkyboxDn = CUSTOM_IMAGE_ID
-			obj.SkyboxFt = CUSTOM_IMAGE_ID
-			obj.SkyboxLf = CUSTOM_IMAGE_ID
-			obj.SkyboxRt = CUSTOM_IMAGE_ID
-			obj.SkyboxUp = CUSTOM_IMAGE_ID
-		end
-	end
-end, 26)
-
-createButton("666", function()
-	Lighting.Ambient = Color3.fromRGB(255, 0, 0)
-	Lighting.Brightness = 0
-
-	stopAllSounds()
-	local sound = Instance.new("Sound")
-	sound.SoundId = "rbxassetid://131961136" -- Trololo para efecto 666
-	sound.Volume = 1
-	sound.Parent = workspace
-	sound:Play()
-
-	for i = 1, 5 do
-		local gui = Instance.new("ScreenGui")
-		gui.Parent = playerGui
-
-		local imageLabel = Instance.new("ImageLabel")
-		imageLabel.Size = UDim2.new(0.3, 0, 0.3, 0)
-		imageLabel.Position = UDim2.new(math.random(0, 70)/100, 0, math.random(0, 70)/100, 0)
-		imageLabel.Image = CUSTOM_IMAGE_ID
-		imageLabel.BackgroundTransparency = 1
-		imageLabel.Parent = gui
-
-		spawn(function()
-			while imageLabel.Parent do
-				for rotation = 0, 360, 10 do
-					if imageLabel.Parent then
-						imageLabel.Rotation = rotation
-						wait(0.05)
-					end
-				end
-			end
-		end)
-
-		game:GetService("Debris"):AddItem(gui, 10)
-	end
-end, 27)
-
--- Actualizar tamaño del scroll
-local function updateScrollSize()
-	local contentSize = listLayout.AbsoluteContentSize
-	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentSize.Y + 10)
+local function emitBillboardBurst(screenGui)
+        local character = player.Character or player.CharacterAdded:Wait()
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        local attachment = Instance.new("Attachment")
+        attachment.Parent = root
+
+        local emitter = Instance.new("ParticleEmitter")
+        emitter.Name = "BurstEmitter"
+        emitter.Texture = "rbxassetid://7482231478"
+        emitter.Color = ColorSequence.new(randomColor(), randomColor())
+        emitter.Size = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1.5),
+                NumberSequenceKeypoint.new(0.5, 3),
+                NumberSequenceKeypoint.new(1, 0.5)
+        })
+        emitter.Lifetime = NumberRange.new(0.6, 1.2)
+        emitter.Speed = NumberRange.new(4, 8)
+        emitter.Rate = 200
+        emitter.RotSpeed = NumberRange.new(-120, 120)
+        emitter.SpreadAngle = Vector2.new(360, 360)
+        emitter.EmissionDirection = Enum.NormalId.Top
+        emitter.Parent = attachment
+
+        Debris:AddItem(attachment, 2)
+        emitter:Emit(80)
 end
 
-listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScrollSize)
-updateScrollSize()
+local function createNeonTotems()
+        local origin = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if not origin then return end
 
--- Funcionalidad del botón cerrar
-closeButton.MouseButton1Click:Connect(function()
-	screenGui:Destroy()
-end)
+        for _ = 1, randomizer:NextInteger(6, 10) do
+                local part = Instance.new("Part")
+                part.Size = Vector3.new(1, randomizer:NextNumber(10, 20), 1)
+                part.Anchored = true
+                part.CanCollide = false
+                part.Material = Enum.Material.Neon
+                part.Color = randomColor()
 
--- Mensaje de bienvenida con tu imagen
-local welcomeGui = Instance.new("ScreenGui")
-welcomeGui.Parent = playerGui
+                local radius = randomizer:NextNumber(12, 24)
+                local angle = randomizer:NextNumber() * math.pi * 2
+                part.CFrame = origin.CFrame * CFrame.new(math.cos(angle) * radius, -origin.Size.Y / 2, math.sin(angle) * radius)
+                part.Parent = workspace
+                Debris:AddItem(part, 12)
 
-local welcomeFrame = Instance.new("Frame")
-welcomeFrame.Size = UDim2.new(0, 350, 0, 150)
-welcomeFrame.Position = UDim2.new(0.5, -175, 0.5, -75)
-welcomeFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-welcomeFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
-welcomeFrame.BorderSizePixel = 2
-welcomeFrame.Parent = welcomeGui
+                TweenService:Create(part, TweenInfo.new(randomizer:NextNumber(4, 6), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+                        CFrame = part.CFrame * CFrame.new(0, randomizer:NextNumber(4, 10), 0)
+                }):Play()
+        end
+end
 
-local welcomeImage = Instance.new("ImageLabel")
-welcomeImage.Size = UDim2.new(0, 80, 0, 80)
-welcomeImage.Position = UDim2.new(0, 10, 0, 10)
-welcomeImage.Image = CUSTOM_IMAGE_ID
-welcomeImage.BackgroundTransparency = 1
-welcomeImage.Parent = welcomeFrame
+local function summonEchoClones()
+        local character = player.Character or player.CharacterAdded:Wait()
+        if not character then return end
 
-local welcomeText = Instance.new("TextLabel")
-welcomeText.Size = UDim2.new(1, -100, 1, 0)
-welcomeText.Position = UDim2.new(0, 100, 0, 0)
-welcomeText.BackgroundTransparency = 1
-welcomeText.Text = "c00lkidd's GUI Loaded!\nPress buttons to hack!\nCustom image ready!"
-welcomeText.TextColor3 = Color3.fromRGB(255, 0, 0)
-welcomeText.TextSize = 14
-welcomeText.Font = Enum.Font.Arial
-welcomeText.TextWrapped = true
-welcomeText.Parent = welcomeFrame
+        for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                        local ghost = Instance.new("Part")
+                        ghost.Size = part.Size
+                        ghost.CFrame = part.CFrame
+                        ghost.Anchored = true
+                        ghost.CanCollide = false
+                        ghost.Transparency = 0.5
+                        ghost.Material = Enum.Material.Neon
+                        ghost.Color = randomColor()
+                        ghost.Parent = workspace
+                        Debris:AddItem(ghost, 6)
 
-spawn(function()
-	while welcomeImage.Parent do
-		for i = 0, 360, 5 do
-			if welcomeImage.Parent then
-				welcomeImage.Rotation = i
-				wait(0.02)
-			end
-		end
-	end
-end)
+                        TweenService:Create(ghost, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                Transparency = 1,
+                                Size = ghost.Size + Vector3.new(1, 1, 1)
+                        }):Play()
+                end
+        end
+end
 
-game:GetService("Debris"):AddItem(welcomeGui, 5)
+local function synthPulse()
+        local sound = Instance.new("Sound")
+        sound.SoundId = randomChoice({
+                "rbxassetid://1843521233",
+                "rbxassetid://1837635164",
+                "rbxassetid://1837637854"
+        })
+        sound.Volume = 0.5
+        sound.PlaybackSpeed = randomizer:NextNumber(0.8, 1.2)
+        sound.Parent = workspace
+        sound:Play()
+        Debris:AddItem(sound, 5)
+end
 
-print("c00lkidd's GUI loaded successfully with custom image: " .. CUSTOM_IMAGE_ID)
-print("Classic sounds included: It's Raining Tacos, Caramelldansen, Nyan Cat, Trololo")
+local function spawnOrbitingRings()
+        local character = player.Character or player.CharacterAdded:Wait()
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+
+        for i = 1, 3 do
+                local ring = Instance.new("Part")
+                ring.Shape = Enum.PartType.Cylinder
+                ring.Size = Vector3.new(0.2, randomizer:NextNumber(8, 12), randomizer:NextNumber(8, 12))
+                ring.Color = randomColor()
+                ring.Material = Enum.Material.Neon
+                ring.Anchored = true
+                ring.CanCollide = false
+                ring.CFrame = root.CFrame * CFrame.Angles(math.pi / 2, 0, 0)
+                ring.Parent = workspace
+                Debris:AddItem(ring, 10)
+
+                spawn(function()
+                        local angle = randomizer:NextNumber() * math.pi * 2
+                        local tilt = randomizer:NextNumber(-0.5, 0.5)
+                        while ring.Parent do
+                                angle += RunService.Heartbeat:Wait() * randomizer:NextNumber(1.5, 3.5)
+                                local offset = CFrame.Angles(tilt, angle, 0)
+                                ring.CFrame = root.CFrame * CFrame.new(0, i * 0.6, 0) * offset
+                        end
+                end)
+        end
+end
+
+local function scatterPlasmaSprites(screenGui)
+        for _ = 1, randomizer:NextInteger(6, 12) do
+                local sprite = Instance.new("ImageLabel")
+                sprite.Image = "rbxassetid://7485086786"
+                sprite.BackgroundTransparency = 1
+                sprite.Size = UDim2.new(0, randomizer:NextInteger(60, 120), 0, randomizer:NextInteger(60, 120))
+                sprite.Position = UDim2.new(randomizer:NextNumber(), -60, randomizer:NextNumber(), -60)
+                sprite.ImageColor3 = randomColor()
+                sprite.ImageTransparency = 0.6
+                sprite.ZIndex = 50
+                sprite.Parent = screenGui
+
+                Debris:AddItem(sprite, 5)
+
+                TweenService:Create(sprite, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+                        ImageTransparency = 1,
+                        Position = sprite.Position + UDim2.new(randomizer:NextNumber(-0.05, 0.05), 0, randomizer:NextNumber(-0.05, 0.05), 0)
+                }):Play()
+        end
+end
+
+local effects -- forward declaration
+
+local function buildInterface()
+        local existingGui = playerGui:FindFirstChild("NeonPlaygroundGui")
+        if existingGui then
+                existingGui:Destroy()
+        end
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "NeonPlaygroundGui"
+        screenGui.ResetOnSpawn = false
+        screenGui.IgnoreGuiInset = true
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui.Parent = playerGui
+
+        local stageFrame = Instance.new("Frame")
+        stageFrame.Name = "Stage"
+        stageFrame.Size = UDim2.new(0.5, randomizer:NextInteger(-40, 60), 0.55, randomizer:NextInteger(-40, 80))
+        stageFrame.Position = UDim2.new(0.25, randomizer:NextInteger(-60, 60), 0.2, randomizer:NextInteger(-40, 40))
+        stageFrame.BackgroundColor3 = randomColor()
+        stageFrame.BorderSizePixel = 0
+        stageFrame.BackgroundTransparency = 0.05
+        stageFrame.Parent = screenGui
+
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 22)
+        corner.Parent = stageFrame
+
+        local stageGradient = Instance.new("UIGradient")
+        stageGradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, randomColor()),
+                ColorSequenceKeypoint.new(0.5, randomColor()),
+                ColorSequenceKeypoint.new(1, randomColor()),
+        })
+        stageGradient.Rotation = randomizer:NextInteger(0, 360)
+        stageGradient.Parent = stageFrame
+
+        spawn(function()
+                local rotation = stageGradient.Rotation
+                while stageFrame.Parent do
+                        rotation += 0.25
+                        stageGradient.Rotation = rotation
+                        RunService.Heartbeat:Wait()
+                end
+        end)
+
+        local header = Instance.new("TextLabel")
+        header.Name = "Title"
+        header.Size = UDim2.new(1, -40, 0, 48)
+        header.Position = UDim2.new(0, 20, 0, 16)
+        header.BackgroundTransparency = 1
+        header.TextColor3 = Color3.new(1, 1, 1)
+        header.Font = Enum.Font.GothamBlack
+        header.TextScaled = true
+        header.TextWrapped = true
+        header.Text = randomChoice({
+                "NEON PLAYGROUND",
+                "CHAOS PATCHER",
+                "STOCHASTIC SUITE",
+                "GLITCH ALCHEMY",
+                "RANDOMIZER 5000"
+        })
+        header.Parent = stageFrame
+
+        local wobbleConnection
+        wobbleConnection = RunService.Heartbeat:Connect(function()
+                if not header.Parent then
+                        wobbleConnection:Disconnect()
+                        return
+                end
+                local t = tick()
+                header.Rotation = math.sin(t * 2.5) * 2.5
+                header.Position = UDim2.new(0, 20 + math.sin(t * 1.8) * 8, 0, 16 + math.cos(t * 1.5) * 6)
+        end)
+
+        local buttonHolder = Instance.new("Frame")
+        buttonHolder.Name = "ButtonHolder"
+        buttonHolder.BackgroundTransparency = 1
+        buttonHolder.Size = UDim2.new(1, -40, 1, -120)
+        buttonHolder.Position = UDim2.new(0, 20, 0, 80)
+        buttonHolder.Parent = stageFrame
+
+        local grid = Instance.new("UIGridLayout")
+        grid.CellPadding = UDim2.new(0, 8, 0, 8)
+        grid.CellSize = UDim2.new(0.3, 0, 0, randomizer:NextInteger(56, 72))
+        grid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        grid.VerticalAlignment = Enum.VerticalAlignment.Top
+        grid.SortOrder = Enum.SortOrder.LayoutOrder
+        grid.Parent = buttonHolder
+
+        local shimmer = Instance.new("Frame")
+        shimmer.Name = "Shimmer"
+        shimmer.AnchorPoint = Vector2.new(0.5, 0.5)
+        shimmer.Size = UDim2.new(1.3, 0, 1.3, 0)
+        shimmer.Position = UDim2.new(0.5, 0, 0.5, 0)
+        shimmer.BackgroundColor3 = Color3.new(1, 1, 1)
+        shimmer.BackgroundTransparency = 0.8
+        shimmer.ZIndex = stageFrame.ZIndex - 1
+        shimmer.Parent = stageFrame
+
+        local shimmerGradient = Instance.new("UIGradient")
+        shimmerGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(0.2, 0.1),
+                NumberSequenceKeypoint.new(0.8, 0.1),
+                NumberSequenceKeypoint.new(1, 1)
+        })
+        shimmerGradient.Parent = shimmer
+
+        spawn(function()
+                local sizePulse = 0
+                while shimmer.Parent do
+                        sizePulse += RunService.Heartbeat:Wait()
+                        shimmer.Rotation = shimmer.Rotation + 0.5
+                        local scale = 1.1 + math.sin(sizePulse) * 0.15
+                        shimmer.Size = UDim2.new(scale, 0, scale, 0)
+                end
+        end)
+
+        local usedLabels = {}
+        local function uniqueButtonLabel(base)
+                        local label = base
+                        local counter = 2
+                        while usedLabels[label] do
+                                label = base .. " " .. counter
+                                counter += 1
+                        end
+                        usedLabels[label] = true
+                        return label
+        end
+
+        local function createButton(text, callback)
+                local button = Instance.new("TextButton")
+                button.Name = text
+                button.Text = text
+                button.Size = UDim2.new(0, 120, 0, 60)
+                button.TextScaled = true
+                button.Font = Enum.Font.GothamBold
+                button.BackgroundColor3 = randomColor()
+                button.TextColor3 = Color3.new(0, 0, 0)
+                button.AutoButtonColor = false
+                button.Parent = buttonHolder
+
+                local uiCorner = Instance.new("UICorner")
+                uiCorner.CornerRadius = UDim.new(0, 12)
+                uiCorner.Parent = button
+
+                local shadow = Instance.new("ImageLabel")
+                shadow.Name = "Shadow"
+                shadow.ZIndex = button.ZIndex - 1
+                shadow.Size = UDim2.new(1, 12, 1, 12)
+                shadow.Position = UDim2.new(0, -6, 0, -4)
+                shadow.BackgroundTransparency = 1
+                shadow.Image = "rbxassetid://1316045217"
+                shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+                shadow.ImageTransparency = 0.45
+                shadow.ScaleType = Enum.ScaleType.Slice
+                shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+                shadow.Parent = button
+
+                button.MouseEnter:Connect(function()
+                        TweenService:Create(button, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                BackgroundColor3 = randomColor(),
+                                TextColor3 = Color3.new(1, 1, 1)
+                        }):Play()
+                end)
+
+                button.MouseLeave:Connect(function()
+                        TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                BackgroundColor3 = randomColor(),
+                                TextColor3 = Color3.new(0, 0, 0)
+                        }):Play()
+                end)
+
+                button.MouseButton1Click:Connect(function()
+                        callback()
+                        TweenService:Create(button, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                                Rotation = randomizer:NextInteger(-6, 6),
+                                Size = UDim2.new(button.Size.X.Scale, button.Size.X.Offset + randomizer:NextInteger(-6, 6), button.Size.Y.Scale, button.Size.Y.Offset + randomizer:NextInteger(-6, 6))
+                        }):Play()
+                end)
+
+                return button
+        end
+
+        for _, effect in ipairs(effects) do
+                if randomizer:NextBoolean() then
+                        local label = uniqueButtonLabel(randomChoice(adjectives) .. " " .. randomChoice(nouns))
+                        createButton(label, function()
+                                effect.action(screenGui)
+                        end)
+                end
+        end
+
+        local function hasEffectButton()
+                for _, child in ipairs(buttonHolder:GetChildren()) do
+                        if child:IsA("TextButton") then
+                                return true
+                        end
+                end
+                return false
+        end
+
+        if not hasEffectButton() then
+                createButton(uniqueButtonLabel("Quantum Pulse"), function()
+                        emitBillboardBurst(screenGui)
+                        scatterPlasmaSprites(screenGui)
+                        synthPulse()
+                end)
+        end
+
+        createButton("Regenerate", function()
+                buildInterface()
+        end)
+
+        local keyboardConnection
+        keyboardConnection = player:GetMouse().KeyDown:Connect(function(key)
+                if key:lower() == "f" then
+                        for _, effect in ipairs(effects) do
+                                effect.action(screenGui)
+                        end
+                end
+        end)
+
+        screenGui.AncestryChanged:Connect(function(_, parent)
+                if not parent and keyboardConnection then
+                        keyboardConnection:Disconnect()
+                end
+        end)
+
+        spawn(function()
+                local originalAmbient = Lighting.Ambient
+                local originalOutdoor = Lighting.OutdoorAmbient
+                while screenGui.Parent do
+                        Lighting.Ambient = randomColor()
+                        Lighting.OutdoorAmbient = randomColor()
+                        wait(3)
+                end
+                Lighting.Ambient = originalAmbient
+                Lighting.OutdoorAmbient = originalOutdoor
+        end)
+
+        return screenGui
+end
+
+effects = {
+        { name = "Emit Echo", action = function(gui)
+                        summonEchoClones()
+                        synthPulse()
+                end },
+        { name = "Totem Rain", action = function(gui)
+                        createNeonTotems()
+                        synthPulse()
+                end },
+        { name = "Orbit Flux", action = function(gui)
+                        spawnOrbitingRings()
+                        synthPulse()
+                end },
+        { name = "Particle Bloom", action = function(gui)
+                        emitBillboardBurst(gui)
+                        scatterPlasmaSprites(gui)
+                end },
+        { name = "Plasma Scatter", action = function(gui)
+                        scatterPlasmaSprites(gui)
+                        synthPulse()
+                end }
+}
+
+return buildInterface()
